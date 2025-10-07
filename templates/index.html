@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mudra Detection — Live</title>
+  <style>
+    :root{
+      --bg:#f3f6fa; --card:#ffffff; --accent:#0ea5ff; --muted:#6b7280;
+      --glass: rgba(255,255,255,0.7);
+      --maxw:1100px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:linear-gradient(180deg,#eef6ff 0%, #fbfbfe 100%);
+      color:#0f172a;
+      display:flex;
+      justify-content:center;
+      padding:30px 18px;
+    }
+    .wrap{
+      width:100%;
+      max-width:var(--maxw);
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:28px;
+      align-items:start;
+    }
+    @media(max-width:980px){
+      .wrap{grid-template-columns:1fr; padding:0 8px}
+    }
+
+    .header{
+      grid-column:1/-1;
+      text-align:center;
+      margin-bottom:6px;
+    }
+    .title{
+      font-size:28px;
+      margin:0;
+      letter-spacing:0.2px;
+      font-weight:700;
+    }
+    .subtitle{color:var(--muted); margin:6px 0 0;font-size:13px}
+
+    .card{
+      background:var(--card);
+      border-radius:14px;
+      padding:12px;
+      box-shadow:0 10px 30px rgba(15,23,42,0.06);
+      overflow:hidden;
+    }
+
+    /* Left — camera */
+    .camera-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:center;
+    }
+    .video-frame{
+      width:100%;
+      max-width:760px;
+      border-radius:10px;
+      overflow:hidden;
+      border:6px solid rgba(6,10,22,0.04);
+      background:#000;
+      position:relative;
+    }
+    .video-frame img{display:block; width:100%; height:auto; min-height:320px; object-fit:cover;}
+
+    .badge{
+      position:absolute;
+      left:18px; top:14px;
+      background:linear-gradient(90deg,var(--accent),#7dd3fc);
+      color:#fff;
+      padding:6px 10px;
+      border-radius:10px;
+      font-weight:700;
+      box-shadow:0 6px 18px rgba(14,165,255,0.18);
+      display:flex; gap:8px; align-items:center;
+      font-size:14px;
+    }
+
+    /* Right — status */
+    .status-col{display:flex; flex-direction:column; gap:14px}
+    .status-head{display:flex; gap:12px; align-items:center}
+    .icon-box{
+      width:70px;height:70px;border-radius:14px;
+      background:linear-gradient(135deg,#eefcff,#e6f7ff);
+      display:flex;align-items:center;justify-content:center;font-size:34px;
+      color:var(--accent); box-shadow:inset 0 -6px 20px rgba(14,165,255,0.06);
+    }
+    .name{font-size:20px;font-weight:800;margin:0}
+    .small{color:var(--muted);font-size:13px;margin-top:2px}
+
+    .explain{
+      background:var(--glass);
+      border-radius:10px;
+      padding:14px;
+      color:#0b1220;
+      line-height:1.45;
+      box-shadow:0 6px 18px rgba(10,20,40,0.03);
+      min-height:120px;
+    }
+
+    .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:var(--muted);font-size:13px}
+    .meta .chip{
+      background:rgba(6,10,22,0.04); padding:6px 10px;border-radius:999px;font-weight:600;
+      display:inline-flex; gap:8px; align-items:center;
+    }
+
+    .example{
+      margin-top:10px;
+      padding:10px;border-radius:8px;background:linear-gradient(180deg,#fff,#fbfdff);
+      border:1px solid rgba(6,10,22,0.04);
+      color:#0b1220;font-size:14px;
+    }
+
+    .footer{grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;margin-top:6px}
+
+    /* nice transition when name changes */
+    .mudra-change{
+      transition:transform .22s ease, opacity .22s ease;
+      will-change:transform,opacity;
+      display:inline-block;
+    }
+    .flash{
+      animation:flash 0.6s ease;
+    }
+    @keyframes flash{0%{transform:translateY(-8px);opacity:0}50%{transform:none;opacity:1}100%{transform:none;opacity:1}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1 class="title">Mudra Detection — Live</h1>
+      <div class="subtitle">Camera on the left • Detection and meaning on the right</div>
+    </div>
+
+    <div class="card camera-wrap">
+      <div class="video-frame">
+        <div class="badge">LIVE</div>
+        <!-- mjpeg stream -->
+        <img id="video" src="{{ url_for('video_feed') }}" alt="Video feed" />
+      </div>
+      <div style="width:100%;display:flex;justify-content:center;color:var(--muted);font-size:13px">
+        Tip: place your dominant hand centered and face the camera palm-forward for best detection.
+      </div>
+    </div>
+
+    <div class="card status-col">
+      <div class="status-head">
+        <div class="icon-box">🖐</div>
+        <div style="flex:1">
+          <div class="mudra-change">
+            <div id="mudra-name" class="name">No hand</div>
+            <div id="mudra-sub" class="small">Waiting for detection...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="explain" id="mudra-explanation">
+        The detected mudra's name, meaning and an example will appear here. Move hand into view to get started.
+      </div>
+
+      <div class="example" id="mudra-example">
+        Example usage: —
+      </div>
+
+      <div class="meta">
+        <div class="chip" id="mudra-last">Last: —</div>
+        <div style="color:var(--muted);font-size:13px;">Updates every 400ms</div>
+      </div>
+    </div>
+
+    <div class="footer">You can edit the explanation text in the app backend (MUDRA_INFO in app.py)</div>
+  </div>
+
+  <script>
+    let lastMudra = null;
+    async function fetchStatus(){
+      try {
+        const res = await fetch('/status', {cache:'no-store'});
+        if(!res.ok) return;
+        const j = await res.json();
+        const name = j.mudra || 'Unknown';
+        const text = j.explanation || '';
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString();
+
+        // update name with animation if changed
+        const nameEl = document.getElementById('mudra-name');
+        const subEl = document.getElementById('mudra-sub');
+        const expl = document.getElementById('mudra-explanation');
+        const example = document.getElementById('mudra-example');
+        const last = document.getElementById('mudra-last');
+
+        if(name !== lastMudra){
+          lastMudra = name;
+          nameEl.classList.remove('flash');
+          void nameEl.offsetWidth;
+          nameEl.classList.add('flash');
+        }
+
+        nameEl.textContent = name;
+        subEl.textContent = name === 'No hand' ? 'No hand detected' : 'Detected mudra';
+        expl.textContent = text;
+        example.textContent = j.example || deriveExample(name);
+        last.textContent = 'Last: ' + timeStr;
+      } catch(e){
+        // console.warn('status err', e);
+      }
+    }
+
+    // simple examples for each mudra (can be updated server-side)
+    function deriveExample(name){
+      const examples = {
+        "Pataka":"Usage: show blessing, halt, or as base pose in storytelling.",
+        "Tripataka":"Usage: indicate a crown, tree or an arrow in a dance scene.",
+        "Shikaram":"Usage: point or show a small tool/weapon.",
+        "Ardhapataka":"Usage: depict a leaf, blade, or lean object.",
+        "Kartharimukha":"Usage: mimic cutting or separation actions.",
+        "Mayura":"Usage: represent a peacock's beak; elegant movements.",
+        "Ardhachandra":"Usage: indicate the moon or a curved shape.",
+        "Arala":"Usage: indicate drinking or a subtle action.",
+        "Katakamukaha":"Usage: pinching for threading/holding garland.",
+        "Simhamukaha":"Usage: show fierceness or a roaring animal.",
+        "Kapitha":"Usage: hold/show fruit or a compact object.",
+        "Mushti":"Usage: express strength or grasping.",
+        "Soochi":"Usage: point precisely or indicate direction.",
+        "Chandrakala":"Usage: show moon/crescent or beauty.",
+        "Mrigashirsha":"Usage: depict a deer head or searching.",
+        "Alapadmakam":"Usage: show blossom or an open object.",
+        "Unknown":"Try adjusting hand position, lighting, or distance.",
+        "No hand":"Place your hand fully inside the camera view."
+      };
+      return examples[name] || 'Example usage not available.';
+    }
+
+    // poll
+    fetchStatus();
+    setInterval(fetchStatus, 400);
+  </script>
+</body>
+</html>
