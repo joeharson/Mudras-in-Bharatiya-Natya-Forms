@@ -96,19 +96,6 @@ http://localhost:5000
 - Microsoft Edge
 - Safari
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit pull requests.
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
@@ -116,9 +103,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Classical dance practitioners for mudra validation
 - Open source community for various tools and libraries
 
-## 📞 Contact
 
-For questions or support, please open an issue in the repository.
 
 ---
 Made with ❤️ for preserving classical Indian dance forms through technology
